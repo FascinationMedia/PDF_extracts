@@ -1,25 +1,38 @@
-#--------------------------------------------------------------------------------
-#include libraries
-#--------------------------------------------------------------------------------
+# <001> - include libraries
 library(pdftools)
 library(stringr)
 library(dplyr)
-#--------------------------------------------------------------------------------
-#include common funcs 
-#--------------------------------------------------------------------------------
+# </001>
+#---------------------------------------------------------------------
+# <002> - include common funcs 
+
 source("C:/DEV/R/R Scripts/CommonFunctions/loadComnFncs.R")
 fncs <- c("getMaxVal.R")
 loaded <- loadComnFncs(fncs)
+# </002>
+#---------------------------------------------------------------------
 
+# <001> Start of script </001> 
 ID <- 1 
 DF_Final <- data.frame()
+directory_path <- "C:/DEV/R/data/pastpapers"
+# Check if the directory exists
+dir_exists <- ifelse(dir.exists(directory_path),TRUE,FALSE) 
 
+DF_MCQPs <- as.data.frame(read.csv("MCQPs.txt", sep = '/', header = TRUE ))
+DF_MCQPs$matchstring <- tolower(paste0(DF_MCQPs$subject," ",DF_MCQPs$paper_no))
 
-#--------------------------------------------------------------------------------
-# Specify the file paths
-#--------------------------------------------------------------------------------
-question_paper_path <- "C:/DEV/R/data/pastpapers/2015 February Agricultural Management Practices paper 1 english.pdf"
-memo_path <- "C:/DEV/R/data/pastpapers/2015 February Agricultural Management Practices paper 1 english memo.pdf"
+file_tlist1 <- sort(list.files(path = directory_path))
+file_tlist2 <- tolower(unique(gsub(" memo", "", file_tlist1, ignore.case = TRUE)))
+
+file_listmc <- c()
+max_row <- getMaxVal(DF_MCQPs)
+
+for (r in 1:max_row)
+{
+  file_listmc <- c(file_listmc, file_tlist2[which(grepl(DF_MCQPs$matchstring[r],file_tlist2))])
+}
+
 
 #--------------------------------------------------------------------------------
 # Read the PDF files
@@ -139,9 +152,11 @@ if (is.na(Ans_Inx))
     Answer_string_trimmed   <- str_squish(Answer_string)
     Answer_letter           <- substr(Answer_string_trimmed,start= 1,stop = 1)
     Answer_index            <- grep(Answer_letter, c("a","b","c","d","e","f","g","h","i","j"))
-    DF_Final[myrow,3] <- Answer_index
+    DF_Final[myrow,3]       <- Answer_index
   }
 }
+write.csv(DF_Final,"QnA_DF.csv", row.names = FALSE)
+
 
 
 
